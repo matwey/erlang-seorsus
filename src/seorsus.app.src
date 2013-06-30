@@ -1,0 +1,15 @@
+{application, seorsus,
+	[{description, "General purpose wrapper aroung RabbitMQ client library"},
+	{vsn, "0.9.0"},
+	{modules, [
+		seorsus_bridge,
+		seorsus_channels_sup,
+		seorsus_channel_sup,
+		seorsus_consumer,
+		seorsus_consumer_sup,
+		seorsus_sup
+	]},
+	{registered, []},
+	{applications, [kernel, stdlib]},
+	{mod, {seorsus_app,[]}}]}.
+
