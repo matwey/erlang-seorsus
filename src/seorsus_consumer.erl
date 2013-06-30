@@ -33,7 +33,7 @@ handle_info(timeout, #state{channel=Channel,consumer_tag=undefined} = State) ->
 handle_info({#'basic.deliver'{consumer_tag = Tag} = Deliver, #'amqp_msg'{props = Props, payload = Payload} = _Content}, #state{channel = Channel, consumer_tag = Tag, interface=If} = State) ->
 	case do_decode(Payload) of
 		{ok, Msg} -> do_process_message(Msg, Props, Channel, Deliver, If);
-		{error, Error} -> do_reject(Channel, Deliver)
+		{error, _Error} -> do_reject(Channel, Deliver)
 	end,
 	{noreply, State};
 handle_info(_Msg, State) ->
