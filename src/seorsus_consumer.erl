@@ -67,7 +67,7 @@ do_decode(Payload) ->
 	case rfc4627:decode(Payload) of
 		{ok, {obj, Proplist}, _Rest} -> {ok, lists:nth(1,Proplist)};
 		{error, Error} -> {error, Error}
-	end.	
+	end.
 
 % -spec do_process_message(
 %	{Key :: string(), Args :: term()},
