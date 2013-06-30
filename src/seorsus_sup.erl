@@ -1,4 +1,4 @@
--module(seorsus__sup).
+-module(seorsus_sup).
 -behaviour(supervisor).
 
 -export([start_link/3]).
