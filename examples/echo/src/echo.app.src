@@ -1,0 +1,14 @@
+{application, echo,
+	[{description, "Echo server example"},
+	{vsn, "0.0.0"},
+	{modules, [
+		echo_sup,
+		echo_app,
+		echo_server
+	]},
+	{registered, []},
+	{applications, [kernel, stdlib]},
+	{included_applications, [seorsus]},
+	{env, [{host, "192.168.185.194"}] },
+	{mod, {echo_app,[]}}]}.
+
