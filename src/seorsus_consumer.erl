@@ -60,7 +60,7 @@ do_ack(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
 	amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}).
 % -spec do_reject(Channel :: channel(), Deliver :: #'basic.deliver'{}) -> ok
 do_reject(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
-	amqp_channel:cast(Channel, #'basic.reject'{delivery_tag = Tag}).
+	amqp_channel:cast(Channel, #'basic.reject'{delivery_tag = Tag, requeue = false}).
 
 % -spec do_decode(Payload :: binary()) -> {ok,term()} | {error, Error}
 do_decode(Payload) ->
