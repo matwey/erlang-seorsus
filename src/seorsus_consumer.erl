@@ -31,10 +31,7 @@ handle_info(timeout, #state{channel=Channel,consumer_tag=undefined} = State) ->
 			{stop, Error, State}
 	end;
 handle_info({#'basic.deliver'{consumer_tag = Tag} = Deliver, #'amqp_msg'{props = Props, payload = Payload} = _Content}, #state{channel = Channel, consumer_tag = Tag, interface=If} = State) ->
-	case do_decode(Payload) of
-		{ok, Msg} -> do_process_message(Msg, Props, Channel, Deliver, If);
-		{error, _Error} -> do_reject(Channel, Deliver)
-	end,
+	do_process_message(Payload, Props, Channel, Deliver, If),
 	{noreply, State};
 handle_info(_Msg, State) ->
 	{noreply, State}.
@@ -62,24 +59,17 @@ do_ack(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
 do_reject(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
 	amqp_channel:cast(Channel, #'basic.reject'{delivery_tag = Tag, requeue = false}).
 
-% -spec do_decode(Payload :: binary()) -> {ok,term()} | {error, Error}
-do_decode(Payload) ->
-	case rfc4627:decode(Payload) of
-		{ok, {obj, Proplist}, _Rest} -> {ok, lists:nth(1,Proplist)};
-		{error, Error} -> {error, Error}
-	end.
-
 % -spec do_process_message(
-%	{Key :: string(), Args :: term()},
+%	Payload :: binary(),
 %	Props :: #'P_basic'{},
 %	Channel :: channel(),
 %	Deliver :: #'basic.deliver'{},
 %	If :: pid() | atom() ) ->
 %       ok | {error, badarg} | {error, no_fun}
-do_process_message({Key,Args}, Props, Channel, Deliver, If) ->
-	case catch gen_server:call(If, {amqp_msg, Key, Args, Props, Channel}) of
+do_process_message(Payload, Props, Channel, Deliver, If) ->
+	case catch gen_server:call(If, {amqp_msg, Payload, Props, Channel}) of
 		ok -> do_ack(Channel, Deliver);
-		{error, badarg} -> do_reject(Channel, Deliver);
-		{error, no_fun} -> do_reject(Channel, Deliver)
+		{error, _} -> do_reject(Channel, Deliver);
+		{_ErrClass, {error, _}} -> do_reject(Channel, Deliver)
 	end.
 

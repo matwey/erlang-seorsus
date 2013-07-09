@@ -16,8 +16,8 @@ init(_) ->
 handle_cast(_Msg, State) ->
         {noreply, State}.
 
-handle_call({amqp_msg, Key, Args, Props, Channel}, _From, State) ->
-	io:format("~w ~w ~w ~w ~n", [Key, Args, Props, Channel]),
+handle_call({amqp_msg, Payload, Props, Channel}, _From, State) ->
+	io:format("~w ~w ~w ~w ~n", [Payload, Props, Channel]),
 	{reply, ok, State};
 handle_call(_Msg, _From, State) ->
         {noreply, State}.
