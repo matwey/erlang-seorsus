@@ -46,26 +46,25 @@ terminate(_Reason, #state{channel = Channel, consumer_tag = Tag} = _State) ->
 code_change(_OldVsn, State, _Extra) ->
 	{ok, State}.
 
-% -type channel() :: pid() | atom()
+-type channel() :: pid() | atom().
 
-% -spec do_declare(Channel :: channel(), DeclareFun :: fun( (channel()) -> {ok, #'basic.consume'{}} | {error, any()} )) -> {ok, #'basic.consume'{}} | {error, any()}
+-spec do_declare(Channel :: channel(), DeclareFun :: fun( (channel()) -> {ok, #'basic.consume'{}} | {error, any()} )) -> {ok, #'basic.consume'{}} | {error, any()}.
 do_declare(Channel, DeclareFun) when is_function(DeclareFun,1) ->
 	DeclareFun(Channel).
 
-% -spec do_ack(Channel :: channel(), Deliver :: #'basic.deliver'{}) -> ok
+-spec do_ack(Channel :: channel(), Deliver :: #'basic.deliver'{}) -> ok.
 do_ack(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
 	amqp_channel:cast(Channel, #'basic.ack'{delivery_tag = Tag}).
-% -spec do_reject(Channel :: channel(), Deliver :: #'basic.deliver'{}) -> ok
+-spec do_reject(Channel :: channel(), Deliver :: #'basic.deliver'{}) -> ok.
 do_reject(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
 	amqp_channel:cast(Channel, #'basic.reject'{delivery_tag = Tag, requeue = false}).
 
-% -spec do_process_message(
-%	Payload :: binary(),
-%	Props :: #'P_basic'{},
-%	Channel :: channel(),
-%	Deliver :: #'basic.deliver'{},
-%	If :: pid() | atom() ) ->
-%       ok | {error, badarg} | {error, no_fun}
+-spec do_process_message(
+	Payload :: binary(),
+	Props :: #'P_basic'{},
+	Channel :: channel(),
+	Deliver :: #'basic.deliver'{},
+	If :: pid() | atom() ) -> ok.
 do_process_message(Payload, Props, Channel, Deliver, If) ->
 	case catch gen_server:call(If, {amqp_msg, Payload, Props, Channel}) of
 		ok -> do_ack(Channel, Deliver);
