@@ -2,6 +2,7 @@
 
 -export([amqp_params_network/1]).
 -export([amqp_params_direct/1]).
+-export([publish/3,publish/4]).
 
 -include_lib("amqp_client/include/amqp_client.hrl").
 
@@ -47,3 +48,13 @@ amqp_params_direct_append({client_properties,Value},Record) ->
 	Record#amqp_params_direct{client_properties=Value};
 amqp_params_direct_append({_Ket,_Value},Record) ->
 	Record.
+
+publish(Channel, Exchange, Key, Payload) when is_binary(Exchange), is_binary(Key) ->
+	Publish = #'basic.publish'{exchange=Exchange,routing_key=Key},
+	Msg = #amqp_msg{payload = Payload},
+	amqp_channel:cast(Channel, Publish, Msg).
+
+publish(Channel, #'P_basic'{reply_to=ReplyTo} = _Props, Payload) ->
+	publish(Channel, ReplyTo, Payload);
+publish(Channel, Queue, Payload) when is_binary(Queue) ->
+	publish(Channel, <<"">>, Queue, Payload).
