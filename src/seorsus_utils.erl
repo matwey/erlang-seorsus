@@ -49,12 +49,18 @@ amqp_params_direct_append({client_properties,Value},Record) ->
 amqp_params_direct_append({_Ket,_Value},Record) ->
 	Record.
 
-publish(Channel, Exchange, Key, Payload) when is_binary(Exchange), is_binary(Key) ->
+publish(Channel, Exchange, Key, #amqp_msg{} = Msg) when is_binary(Exchange), is_binary(Key) ->
 	Publish = #'basic.publish'{exchange=Exchange,routing_key=Key},
+	amqp_channel:cast(Channel, Publish, Msg);
+publish(Channel, Exchange, Key, Payload) when is_binary(Exchange), is_binary(Key) ->
 	Msg = #amqp_msg{payload = Payload},
-	amqp_channel:cast(Channel, Publish, Msg).
+	publish(Channel, Exchange, Key, Msg).
 
-publish(Channel, #'P_basic'{reply_to=ReplyTo} = _Props, Payload) ->
-	publish(Channel, ReplyTo, Payload);
+publish(Channel, #'P_basic'{reply_to=ReplyTo, correlation_id=CorrelationID} = _Props, #amqp_msg{} = Msg) ->
+	Props = #'P_basic'{correlation_id = CorrelationID},
+	Msg2 = Msg#amqp_msg{props = Props},
+	publish(Channel, ReplyTo, Msg2);
+publish(Channel, #'P_basic'{} = Props, Payload) ->
+	publish(Channel, Props, #amqp_msg{payload = Payload});
 publish(Channel, Queue, Payload) when is_binary(Queue) ->
 	publish(Channel, <<"">>, Queue, Payload).

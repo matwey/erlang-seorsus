@@ -51,11 +51,13 @@ check_amqp_params_direct_test() ->
 
 	?_assertEqual(Expect,seorsus_utils:amqp_params_direct(Proplist)).
 
-amqp_channel_cast_publish_expect(X,Key,Payload) ->
+amqp_channel_cast_publish_expect(X,Key,#amqp_msg{} = Msg2) ->
 	meck:new(amqp_channel,[]),
 	Publish2 = #'basic.publish'{exchange=X,routing_key=Key},
-	Msg2 = #amqp_msg{payload=Payload},
-	meck:expect(amqp_channel, cast,  fun (channel, Publish, Msg) when Publish == Publish2, Msg == Msg2 -> ok; (_,_,_) -> error end).
+	meck:expect(amqp_channel, cast,  fun (channel, Publish, Msg) when Publish == Publish2, Msg == Msg2 -> ok; (_,_,_) -> error end);
+amqp_channel_cast_publish_expect(X,Key,Payload) ->
+	Msg = #amqp_msg{payload=Payload},
+	amqp_channel_cast_publish_expect(X,Key,Msg).
 
 amqp_channel_cast_publish_clean() ->
 	meck:validate(amqp_channel),
@@ -87,11 +89,19 @@ check_publish_by_replyto_test_() ->
 	X = <<"">>,
 	Q = <<"queue">>,
 	Payload = <<"payload">>,
+	CI = <<"correlation_id">>,
+	Msg2 = #amqp_msg{payload=Payload, props=#'P_basic'{correlation_id=CI}},
 	Props = #'P_basic'{reply_to=Q},
+	Props2 = #'P_basic'{reply_to=Q,correlation_id=CI},
 
-	{setup,
+	[{setup,
 		fun () -> amqp_channel_cast_publish_expect(X,Q,Payload) end,
 		fun (_) -> amqp_channel_cast_publish_clean() end,
 		?_assertEqual(ok, seorsus_utils:publish(channel,Props,Payload))
-	}.
+	},
+	{setup,
+		fun () -> amqp_channel_cast_publish_expect(X,Q,Msg2) end,
+		fun (_) -> amqp_channel_cast_publish_clean() end,
+		?_assertEqual(ok, seorsus_utils:publish(channel,Props2,Payload))
+	}].
 
