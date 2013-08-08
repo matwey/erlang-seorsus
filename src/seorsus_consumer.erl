@@ -66,7 +66,7 @@ do_reject(Channel, #'basic.deliver'{delivery_tag = Tag} = _Deliver) ->
 	Deliver :: #'basic.deliver'{},
 	If :: pid() | atom() ) -> ok.
 do_process_message(Payload, Props, Channel, Deliver, If) ->
-	case catch gen_server:call(If, {amqp_msg, Payload, Props, Channel}) of
+	case catch gen_server:call(If, {amqp_msg, Payload, Props, Deliver, Channel}) of
 		ok -> do_ack(Channel, Deliver);
 		{error, _} -> do_reject(Channel, Deliver);
 		{_ErrClass, {error, _}} -> do_reject(Channel, Deliver)
